@@ -27,8 +27,7 @@ object DirectoryUtils {
         var file: File? = null
         if (preferExternal
             && "mounted" == Environment.getExternalStorageState()
-            && hasExternalStoragePermission(context)
-        ) {
+            && hasExternalStoragePermission(context)) {
             file = context.getExternalFilesDir(null)
         }
 
