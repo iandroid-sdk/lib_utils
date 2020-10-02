@@ -123,6 +123,11 @@ object PermissionUtils {
                 )
             }
         } else {
+            requestPermissions(
+                activity,
+                PERMISSIONS_VOICE_LIVE_GROUP,
+                REQUEST_START_VOICE_LIVE_CODE
+            )
 //            showExplanationDialog(
 //                activity,
 //                R.string.explain_start_voice_live,
