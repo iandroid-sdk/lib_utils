@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
 import java.util.*
 
@@ -12,69 +13,57 @@ import java.util.*
  */
 object PermissionUtils {
     // 狀態碼、標誌位
-    private val REQUEST_STATUS_CODE = 0x001
-    public val REQUEST_START_VOICE_LIVE_CODE = 0x002
+    private const val REQUEST_STATUS_CODE = 0x001
+    const val REQUEST_START_VOICE_LIVE_CODE = 0x002
+    const val REQUEST_ALBUM_CODE = 0x004    //访问相册权限
+    const val REQUEST_CAMERA_CODE = 0x008   //拍照权限
 
-    private val PERMISSIONS_VOICE_RTC_GROUP = arrayOf(
-        Manifest.permission.RECORD_AUDIO
-    )
+    //连麦权限
+    private val PERMISSIONS_VOICE_RTC_GROUP = arrayOf(Manifest.permission.RECORD_AUDIO)
 
+    //开播权限
     private val PERMISSIONS_VOICE_LIVE_GROUP = arrayOf(
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
 
+    //拍照权限
+    private val PERMISSIONS_CAMERA_GROUP = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    //读写权限
+    private val PERMISSIONS_READ_WRITE_STORAGE_GROUP = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
     /**
      * 對權限字符串數組中的所有權限進行申請授權，如果用戶選擇了「never ask again」，則不會彈出系統的Permission申請授權對話框
      */
-    fun requestPermissions(activity: Activity?, permissions: Array<String>?) {
-        if (activity == null) {
-            return
-        }
-        if (permissions == null) {
-            return
-        }
-        ActivityCompat.requestPermissions(
-            activity, permissions,
-            REQUEST_STATUS_CODE
-        )
+    private fun requestPermissions(
+        @NonNull activity: Activity,
+        @NonNull permissions: Array<String>
+    ) {
+        ActivityCompat.requestPermissions(activity, permissions, REQUEST_STATUS_CODE)
     }
 
-    fun requestPermissions(activity: Activity?, permissions: Array<String>?, requestCode: Int) {
-        if (activity == null) {
-            return
-        }
-        if (permissions == null) {
-            return
-        }
+    private fun requestPermissions(
+        @NonNull activity: Activity, @NonNull permissions: Array<String>, requestCode: Int
+    ) {
         ActivityCompat.requestPermissions(activity, permissions, requestCode)
     }
 
-    fun checkSelfPermissionGroup(activity: Activity?, permissions: Array<String>?): Int {
-        if (activity == null) {
-            return PackageManager.PERMISSION_DENIED
-        }
-        if (permissions == null || permissions.isEmpty()) {
-            return PackageManager.PERMISSION_DENIED
-        }
+    private fun checkSelfPermissionGroup(
+        @NonNull activity: Activity,
+        @NonNull permissions: Array<String>
+    ): Int {
         for (permission in permissions) {
-            /**
-             * hockey app reported.
-             * java.lang.RuntimeException: Unknown exception code: 1 msg null
-             * Package: com.lang.lang
-             * Version Code: 479
-             * Version Name: 2.8.1.2
-             * Android: 4.4.4
-             * Android Build: K30-T_S043_150212
-             * Manufacturer: LENOVO
-             * Model: Lenovo K30-T
-             */
             try {
-                if (ActivityCompat.checkSelfPermission(
-                        activity,
-                        permission
-                    ) != PackageManager.PERMISSION_GRANTED
+                if (ActivityCompat.checkSelfPermission(activity,
+                        permission) != PackageManager.PERMISSION_GRANTED
                 ) {
                     return PackageManager.PERMISSION_DENIED
                 }
@@ -85,55 +74,80 @@ object PermissionUtils {
         return PackageManager.PERMISSION_GRANTED
     }
 
-
-    fun checkAndRequestRTCPermission(activity: Activity?): Boolean {
-        return if (checkSelfPermissionGroup(
-                activity,
-                PERMISSIONS_VOICE_RTC_GROUP
-            ) ==
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            true
-        } else {
-            requestPermissions(
-                activity,
-                PERMISSIONS_VOICE_RTC_GROUP
-            )
+    /**
+     * 检查连麦系统权限
+     */
+    fun checkAndRequestRTCPermission(activity: Activity): Boolean {
+        return if (checkSelfPermissionGroup(activity,
+                PERMISSIONS_VOICE_RTC_GROUP) == PackageManager.PERMISSION_GRANTED
+        ) true
+        else {
+            requestPermissions(activity, PERMISSIONS_VOICE_RTC_GROUP)
             false
         }
     }
 
+    /**
+     * 检查开播权限
+     */
     fun requestStartVoiceLivePermissions(activity: Activity) {
-        if (checkSelfPermissionGroup(activity, PERMISSIONS_VOICE_LIVE_GROUP)
-            == PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermissionGroup(activity,
+                PERMISSIONS_VOICE_LIVE_GROUP) == PackageManager.PERMISSION_GRANTED
+        ) {
             //for activity callback
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 genGrantedResultArray(PERMISSIONS_VOICE_LIVE_GROUP.size)?.let {
-                    activity.onRequestPermissionsResult(
-                        REQUEST_START_VOICE_LIVE_CODE,
+                    activity.onRequestPermissionsResult(REQUEST_START_VOICE_LIVE_CODE,
                         PERMISSIONS_VOICE_LIVE_GROUP,
-                        it
-                    )
+                        it)
                 }
             } else {
-                requestPermissions(
-                    activity,
+                requestPermissions(activity,
                     PERMISSIONS_VOICE_LIVE_GROUP,
-                    REQUEST_START_VOICE_LIVE_CODE
-                )
+                    REQUEST_START_VOICE_LIVE_CODE)
             }
         } else {
-            requestPermissions(
-                activity,
+            requestPermissions(activity,
                 PERMISSIONS_VOICE_LIVE_GROUP,
-                REQUEST_START_VOICE_LIVE_CODE
-            )
-//            showExplanationDialog(
-//                activity,
-//                R.string.explain_start_voice_live,
-//                PERMISSIONS_VOICE_LIVE_GROUP,
-//                REQUEST_START_VOICE_LIVE_CODE
-//            )
+                REQUEST_START_VOICE_LIVE_CODE)
+        }
+    }
+
+    //拍照全选
+    open fun requestCameraPermissions(activity: Activity, code: Int) {
+        if (checkSelfPermissionGroup(activity,
+                PERMISSIONS_CAMERA_GROUP) == PackageManager.PERMISSION_GRANTED
+        ) {
+            //for activity callback
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                genGrantedResultArray(PERMISSIONS_CAMERA_GROUP.size)?.let {
+                    activity.onRequestPermissionsResult(code, PERMISSIONS_CAMERA_GROUP, it)
+                }
+            } else {
+                requestPermissions(activity, PERMISSIONS_CAMERA_GROUP, code)
+            }
+        } else {
+            requestPermissions(activity, PERMISSIONS_CAMERA_GROUP, code)
+        }
+    }
+
+    //读写全选
+    open fun requestReadWritePermissions(activity: Activity, code: Int) {
+        if (checkSelfPermissionGroup(activity,
+                PERMISSIONS_READ_WRITE_STORAGE_GROUP) == PackageManager.PERMISSION_GRANTED
+        ) {
+            //for activity callback
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                genGrantedResultArray(PERMISSIONS_READ_WRITE_STORAGE_GROUP.size)?.let {
+                    activity.onRequestPermissionsResult(code,
+                        PERMISSIONS_READ_WRITE_STORAGE_GROUP,
+                        it)
+                }
+            } else {
+                requestPermissions(activity, PERMISSIONS_READ_WRITE_STORAGE_GROUP, code)
+            }
+        } else {
+            requestPermissions(activity, PERMISSIONS_READ_WRITE_STORAGE_GROUP, code)
         }
     }
 
@@ -142,5 +156,4 @@ object PermissionUtils {
         Arrays.fill(grantResults, PackageManager.PERMISSION_GRANTED)
         return grantResults
     }
-
 }
