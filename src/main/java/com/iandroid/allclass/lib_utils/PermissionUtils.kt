@@ -17,6 +17,7 @@ object PermissionUtils {
     const val REQUEST_START_VOICE_LIVE_CODE = 0x002
     const val REQUEST_ALBUM_CODE = 0x004    //访问相册权限
     const val REQUEST_CAMERA_CODE = 0x008   //拍照权限
+    const val REQUEST_CALENDAR_CODE = 0X010 //日历权限
 
     //连麦权限
     private val PERMISSIONS_VOICE_RTC_GROUP = arrayOf(Manifest.permission.RECORD_AUDIO)
@@ -40,6 +41,11 @@ object PermissionUtils {
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
+    public var PERMISSIONS_CALENDAR_GROUP = arrayOf(
+        Manifest.permission.READ_CALENDAR,
+        Manifest.permission.WRITE_CALENDAR
+    )
+
     /**
      * 對權限字符串數組中的所有權限進行申請授權，如果用戶選擇了「never ask again」，則不會彈出系統的Permission申請授權對話框
      */
@@ -56,22 +62,43 @@ object PermissionUtils {
         ActivityCompat.requestPermissions(activity, permissions, requestCode)
     }
 
-    private fun checkSelfPermissionGroup(
-        @NonNull activity: Activity,
+    public fun checkSelfPermissionGroup(
+        @NonNull activity: Activity?,
         @NonNull permissions: Array<String>
     ): Int {
         for (permission in permissions) {
             try {
-                if (ActivityCompat.checkSelfPermission(activity,
-                        permission) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    return PackageManager.PERMISSION_DENIED
+                activity?.run {
+                    if (ActivityCompat.checkSelfPermission(this,
+                            permission) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        return PackageManager.PERMISSION_DENIED
+                    }
                 }
             } catch (e: Exception) {
                 return PackageManager.PERMISSION_DENIED
             }
         }
         return PackageManager.PERMISSION_GRANTED
+    }
+
+    //检查日历权限
+    fun requestCalendarPermission(activity: Activity?) {
+        if (activity == null) return
+        if (checkSelfPermissionGroup(activity,
+                PERMISSIONS_CALENDAR_GROUP) == PackageManager.PERMISSION_GRANTED
+        ) {
+            //for activity callback
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                activity.onRequestPermissionsResult(REQUEST_CALENDAR_CODE,
+                    PERMISSIONS_CALENDAR_GROUP,
+                    genGrantedResultArray(PERMISSIONS_CALENDAR_GROUP.size)!!)
+            } else {
+                requestPermissions(activity, PERMISSIONS_CALENDAR_GROUP, REQUEST_CALENDAR_CODE)
+            }
+        } else {
+            requestPermissions(activity, PERMISSIONS_CALENDAR_GROUP, REQUEST_CALENDAR_CODE)
+        }
     }
 
     /**
