@@ -1,7 +1,9 @@
 package com.iandroid.allclass.lib_utils
 
 import android.content.Context
+import android.util.DisplayMetrics
 import android.util.TypedValue
+import android.view.WindowManager
 
 /**
 created by wangkm
@@ -19,5 +21,13 @@ object DensityUtils {
             TypedValue.COMPLEX_UNIT_DIP,
             dpVal, context.resources.displayMetrics
         ).toInt()
+    }
+
+    fun getScreenWidth(context: Context): Int {
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display = wm.defaultDisplay
+        val realDisplayMetrics = DisplayMetrics()
+        display.getRealMetrics(realDisplayMetrics)
+        return realDisplayMetrics.widthPixels
     }
 }
