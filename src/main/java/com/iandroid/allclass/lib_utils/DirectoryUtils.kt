@@ -5,8 +5,12 @@ import android.content.pm.PackageManager
 import android.os.Environment
 import android.text.TextUtils
 import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.zip.CRC32
+import java.util.zip.CheckedInputStream
 
 /**
 created by wangkm
@@ -83,4 +87,26 @@ object DirectoryUtils {
         return sDateTime
     }
 
+    fun getFileCRCCode(file: File): String {
+        try {
+            val fileInputstream = FileInputStream(file)
+            val crc32 = CRC32()
+            val buf = ByteArray(1024 * 64) //fetch 64k byte to speed up
+            val checkedInputstream = CheckedInputStream(fileInputstream, crc32)
+            while (checkedInputstream.read(buf) != -1) {
+            }
+            return String.format("%08X", crc32.value).toLowerCase()
+        } catch (e: IOException) {
+        }
+        return ""
+    }
+
+    fun delFile(file: File) {
+        try {
+            if (file.exists()) {
+                file.delete()
+            }
+        } catch (ee: Exception) {
+        }
+    }
 }
