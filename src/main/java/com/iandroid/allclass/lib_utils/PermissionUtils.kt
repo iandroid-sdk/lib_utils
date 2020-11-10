@@ -18,6 +18,8 @@ object PermissionUtils {
     const val REQUEST_ALBUM_CODE = 0x004    //访问相册权限
     const val REQUEST_CAMERA_CODE = 0x008   //拍照权限
     const val REQUEST_CALENDAR_CODE = 0X010 //日历权限
+    const val REQUEST_READWIRTE_CODE = 0X020 //读写权限
+
 
     //连麦权限
     private val PERMISSIONS_VOICE_RTC_GROUP = arrayOf(Manifest.permission.RECORD_AUDIO)
