@@ -18,7 +18,7 @@ object MD5 {
                 if (buffBytes[i].toInt() and 255 < 16) {
                     encrypt.append("0")
                 }
-                encrypt.append(((buffBytes[i].toInt() and 255) as Long).toString(16))
+                encrypt.append((buffBytes[i].toLong() and 255).toString(16))
             }
             encrypt.toString()
         }
