@@ -1,7 +1,9 @@
 package com.iandroid.allclass.lib_utils
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Environment
 import android.text.TextUtils
 import java.io.File
@@ -33,7 +35,8 @@ object DirectoryUtils {
         var file: File? = null
         if (preferExternal
             && "mounted" == Environment.getExternalStorageState()
-            && hasExternalStoragePermission(context)) {
+            && hasExternalStoragePermission(context)
+        ) {
             file = context.getExternalFilesDir(null)
         }
 
@@ -75,8 +78,10 @@ object DirectoryUtils {
     }
 
     fun getRandomFileName(ext: String): String {
-        return getTimeFileName(System.currentTimeMillis(),
-            "yyMMddHHmmssSSS") + ext
+        return getTimeFileName(
+            System.currentTimeMillis(),
+            "yyMMddHHmmssSSS"
+        ) + ext
     }
 
     fun getTimeFileName(time: Long, type: String?): String {
@@ -107,6 +112,16 @@ object DirectoryUtils {
                 file.delete()
             }
         } catch (ee: Exception) {
+        }
+    }
+
+    fun scanMedia(context: Context, file: File) {
+        try {
+            val uri = Uri.fromFile(file)
+            val scanFileIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            scanFileIntent.data = uri
+            context.sendBroadcast(scanFileIntent)
+        } catch (e: java.lang.Exception) {
         }
     }
 }
