@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
 import java.util.*
 
 /**
@@ -41,7 +42,8 @@ object PermissionUtils {
     //读写权限
     private val PERMISSIONS_READ_WRITE_STORAGE_GROUP = arrayOf(
         Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
 
     public var PERMISSIONS_CALENDAR_GROUP = arrayOf(
         Manifest.permission.READ_CALENDAR,
@@ -64,15 +66,23 @@ object PermissionUtils {
         ActivityCompat.requestPermissions(activity, permissions, requestCode)
     }
 
-    public fun checkSelfPermissionGroup(
+    private fun requestPermissions(
+        @NonNull fragment: Fragment, @NonNull permissions: Array<String>, requestCode: Int
+    ) {
+        fragment.requestPermissions(permissions, requestCode)
+    }
+
+    fun checkSelfPermissionGroup(
         @NonNull activity: Activity?,
         @NonNull permissions: Array<String>
     ): Int {
         for (permission in permissions) {
             try {
                 activity?.run {
-                    if (ActivityCompat.checkSelfPermission(this,
-                            permission) != PackageManager.PERMISSION_GRANTED
+                    if (ActivityCompat.checkSelfPermission(
+                            this,
+                            permission
+                        ) != PackageManager.PERMISSION_GRANTED
                     ) {
                         return PackageManager.PERMISSION_DENIED
                     }
@@ -84,17 +94,39 @@ object PermissionUtils {
         return PackageManager.PERMISSION_GRANTED
     }
 
+    private fun checkSelfPermissionGroup(fragment: Fragment, permissions: Array<String>): Int {
+        for (permission in permissions) {
+            try {
+                if (ActivityCompat.checkSelfPermission(
+                        fragment.context!!,
+                        permission
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return PackageManager.PERMISSION_DENIED
+                }
+
+            } catch (e: Exception) {
+                return PackageManager.PERMISSION_DENIED
+            }
+        }
+        return PackageManager.PERMISSION_GRANTED
+    }
+
     //检查日历权限
     fun requestCalendarPermission(activity: Activity?) {
         if (activity == null) return
-        if (checkSelfPermissionGroup(activity,
-                PERMISSIONS_CALENDAR_GROUP) == PackageManager.PERMISSION_GRANTED
+        if (checkSelfPermissionGroup(
+                activity,
+                PERMISSIONS_CALENDAR_GROUP
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             //for activity callback
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                activity.onRequestPermissionsResult(REQUEST_CALENDAR_CODE,
+                activity.onRequestPermissionsResult(
+                    REQUEST_CALENDAR_CODE,
                     PERMISSIONS_CALENDAR_GROUP,
-                    genGrantedResultArray(PERMISSIONS_CALENDAR_GROUP.size)!!)
+                    genGrantedResultArray(PERMISSIONS_CALENDAR_GROUP.size)!!
+                )
             } else {
                 requestPermissions(activity, PERMISSIONS_CALENDAR_GROUP, REQUEST_CALENDAR_CODE)
             }
@@ -107,8 +139,10 @@ object PermissionUtils {
      * 检查连麦系统权限
      */
     fun checkAndRequestRTCPermission(activity: Activity): Boolean {
-        return if (checkSelfPermissionGroup(activity,
-                PERMISSIONS_VOICE_RTC_GROUP) == PackageManager.PERMISSION_GRANTED
+        return if (checkSelfPermissionGroup(
+                activity,
+                PERMISSIONS_VOICE_RTC_GROUP
+            ) == PackageManager.PERMISSION_GRANTED
         ) true
         else {
             requestPermissions(activity, PERMISSIONS_VOICE_RTC_GROUP)
@@ -120,32 +154,76 @@ object PermissionUtils {
      * 检查开播权限
      */
     fun requestStartVoiceLivePermissions(activity: Activity) {
-        if (checkSelfPermissionGroup(activity,
-                PERMISSIONS_VOICE_LIVE_GROUP) == PackageManager.PERMISSION_GRANTED
+        if (checkSelfPermissionGroup(
+                activity,
+                PERMISSIONS_VOICE_LIVE_GROUP
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             //for activity callback
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 genGrantedResultArray(PERMISSIONS_VOICE_LIVE_GROUP.size)?.let {
-                    activity.onRequestPermissionsResult(REQUEST_START_VOICE_LIVE_CODE,
+                    activity.onRequestPermissionsResult(
+                        REQUEST_START_VOICE_LIVE_CODE,
                         PERMISSIONS_VOICE_LIVE_GROUP,
-                        it)
+                        it
+                    )
                 }
             } else {
-                requestPermissions(activity,
+                requestPermissions(
+                    activity,
                     PERMISSIONS_VOICE_LIVE_GROUP,
-                    REQUEST_START_VOICE_LIVE_CODE)
+                    REQUEST_START_VOICE_LIVE_CODE
+                )
             }
         } else {
-            requestPermissions(activity,
+            requestPermissions(
+                activity,
                 PERMISSIONS_VOICE_LIVE_GROUP,
-                REQUEST_START_VOICE_LIVE_CODE)
+                REQUEST_START_VOICE_LIVE_CODE
+            )
+        }
+    }
+
+    /**
+     * 检查开播权限
+     */
+    fun requestStartVoiceLivePermissions(fragment: Fragment) {
+        if (checkSelfPermissionGroup(
+                fragment,
+                PERMISSIONS_VOICE_LIVE_GROUP
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            //for activity callback
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                genGrantedResultArray(PERMISSIONS_VOICE_LIVE_GROUP.size)?.let {
+                    fragment.onRequestPermissionsResult(
+                        REQUEST_START_VOICE_LIVE_CODE,
+                        PERMISSIONS_VOICE_LIVE_GROUP,
+                        it
+                    )
+                }
+            } else {
+                requestPermissions(
+                    fragment,
+                    PERMISSIONS_VOICE_LIVE_GROUP,
+                    REQUEST_START_VOICE_LIVE_CODE
+                )
+            }
+        } else {
+            requestPermissions(
+                fragment,
+                PERMISSIONS_VOICE_LIVE_GROUP,
+                REQUEST_START_VOICE_LIVE_CODE
+            )
         }
     }
 
     //拍照全选
     open fun requestCameraPermissions(activity: Activity, code: Int) {
-        if (checkSelfPermissionGroup(activity,
-                PERMISSIONS_CAMERA_GROUP) == PackageManager.PERMISSION_GRANTED
+        if (checkSelfPermissionGroup(
+                activity,
+                PERMISSIONS_CAMERA_GROUP
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             //for activity callback
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -162,15 +240,19 @@ object PermissionUtils {
 
     //读写全选
     open fun requestReadWritePermissions(activity: Activity, code: Int) {
-        if (checkSelfPermissionGroup(activity,
-                PERMISSIONS_READ_WRITE_STORAGE_GROUP) == PackageManager.PERMISSION_GRANTED
+        if (checkSelfPermissionGroup(
+                activity,
+                PERMISSIONS_READ_WRITE_STORAGE_GROUP
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             //for activity callback
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 genGrantedResultArray(PERMISSIONS_READ_WRITE_STORAGE_GROUP.size)?.let {
-                    activity.onRequestPermissionsResult(code,
+                    activity.onRequestPermissionsResult(
+                        code,
                         PERMISSIONS_READ_WRITE_STORAGE_GROUP,
-                        it)
+                        it
+                    )
                 }
             } else {
                 requestPermissions(activity, PERMISSIONS_READ_WRITE_STORAGE_GROUP, code)
